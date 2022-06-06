@@ -34,7 +34,9 @@ func router() error {
 		if err != nil {
 			return err
 		}
-
+		return nil
+	case 4:
+		gorutinePanic()
 		return nil
 
 	default:
