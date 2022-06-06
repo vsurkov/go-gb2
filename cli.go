@@ -30,16 +30,8 @@ func router() error {
 		}
 		return nil
 	case 3:
-		var path string
-		fmt.Print("Укажите имя директории для создания файлов: ")
-		_, err := fmt.Scanln(&path)
+		err = createFiles(1000000)
 		if err != nil {
-			return err
-		}
-
-		err = validatePath(path)
-		if err != nil {
-			fmt.Println("error: %s", err)
 			return err
 		}
 

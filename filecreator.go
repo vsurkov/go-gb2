@@ -2,88 +2,119 @@ package main
 
 import (
 	"bufio"
-	"errors"
-	"fmt"
-	"io/fs"
 	"log"
 	"os"
+	"strconv"
+	"time"
 )
 
-func createBillionFiles(path string) error {
-	err := validatePath(path)
-	if err != nil {
-		fmt.Println("error: %s", err)
-		return err
-	}
+const (
+	path = "/tmp/gb/dat"
+)
 
-	err = validateDir(path)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func validatePath(dir string) error {
-	if valid := fs.ValidPath(dir); valid != true {
-		return errors.New("dir not valid")
+//Простая реализация, которая падает.
+//Recovered panic: open /tmp/gb/dat253: too many open files
+func dummyCreateFiles(count int) error {
+	fileCount := count
+	defer timeTrack(time.Now(), "create files")
+	for n := 0; n <= fileCount; n++ {
+		fullPath := path + strconv.Itoa(n)
+		_, err := os.Create(fullPath)
+		check(err)
 	}
 	return nil
 }
 
-func validateDir(dir string) error {
-	root := dir
-	fileSystem := os.DirFS(root)
-	//fmt.Println(getCurrentPath())
-
-	err := fs.WalkDir(fileSystem, ".", func(dir string, d fs.DirEntry, err error) error {
+//Реализация которая работает, выбран самый быстрый из трех стандартных способов записи данных при создании файла
+func createFiles(count int) error {
+	var totalBytes int
+	fileCount := count
+	defer timeTrack(time.Now(), "create files")
+	for n := 0; n <= fileCount; n++ {
+		wb, err := createBuffFile(n)
 		if err != nil {
-			log.Fatal(err)
 			return err
 		}
-		return nil
-	})
+		totalBytes += wb
 
-	if err != nil {
-		return err
 	}
-	fmt.Printf("Path '%s' is valid\n", dir)
 	return nil
 }
 
-func getCurrentPath() string {
-	dir, err := os.Getwd()
+//Результат запуска - ошибки нет:
+//На 1000000 2022/06/06 16:09:38 create files took 3m35.382211087s
+//На 10000 2022/06/06 16:03:37 create files took 1.185854488s
+
+func createBuffFile(n int) (wb int, err error) {
+	fullPath := path + strconv.Itoa(n)
+	file, err := os.Create(fullPath)
 	check(err)
-	return dir
+	defer func() {
+		err = file.Close()
+		check(err)
+	}()
+
+	//Пишем используя буфер
+	w := bufio.NewWriter(file)
+	wb, err = w.WriteString("ooooo")
+	check(err)
+	err = w.Flush()
+	check(err)
+
+	return wb, nil
 }
 
-func createFile(path string, prefix string) error {
-	f, err := os.Create("/tmp/dat2")
+//Результат запуска - ошибки нет:
+//2022/06/06 00:20:05 create files took 2h4m48.764971194s
+//ls /tmp/gb | wc -l
+//1000001
+
+//На 10000 штуках 2022/06/06 15:09:06 create files took 1m14.357327911s
+
+func createStringFile(n int) (wb int, err error) {
+	fullPath := path + strconv.Itoa(n)
+	file, err := os.Create(fullPath)
 	check(err)
-	defer f.Close()
+	defer func() {
+		err = file.Close()
+		check(err)
+	}()
 
-	d2 := []byte{115, 111, 109, 101, 10}
-	n2, err := f.Write(d2)
+	//Пишем стринг
+	//wb, err = file.WriteString("I will not burp in class.\n")
+	wb, err = file.WriteString("ooooo")
 	check(err)
-	fmt.Printf("wrote %d bytes\n", n2)
-
-	n3, err := f.WriteString("writes\n")
+	err = file.Sync()
 	check(err)
-	fmt.Printf("wrote %d bytes\n", n3)
+	return wb, nil
+}
 
-	f.Sync()
-
-	w := bufio.NewWriter(f)
-	n4, err := w.WriteString("buffered\n")
+//На 10000 штуках 2022/06/06 15:49:34 create files took 1m13.40286839s
+func createBytesFile(n int) (wb int, err error) {
+	fullPath := path + strconv.Itoa(n)
+	file, err := os.Create(fullPath)
 	check(err)
-	fmt.Printf("wrote %d bytes\n", n4)
+	defer func() {
+		err = file.Close()
+		check(err)
+	}()
 
-	w.Flush()
-	return nil
+	//Пишем байты
+	data := []byte{111, 111, 111, 111, 111}
+	wb, err = file.Write(data)
+	check(err)
+	err = file.Sync()
+	check(err)
+
+	return wb, nil
 }
 
 func check(e error) {
 	if e != nil {
 		panic(e)
 	}
+}
+func timeTrack(start time.Time, name string) {
+	elapsed := time.Since(start)
+	log.Printf("%s took %s", name, elapsed)
 }
