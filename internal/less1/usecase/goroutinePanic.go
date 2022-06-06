@@ -1,3 +1,6 @@
+/*
+ Учебный пример обработки паник в горутине
+*/
 package less1
 
 import (
@@ -5,6 +8,7 @@ import (
 	"time"
 )
 
+//GoroutinePanic() реализует простой пример обработки паники в горутине
 func GoroutinePanic() {
 	go func() {
 		defer func() {

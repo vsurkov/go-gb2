@@ -14,7 +14,7 @@ func Router() error {
 	3 - создание миллиона пустых файлов
 	4 - задание с паникой в горутине 
 Ваш выбор: `
-	fmt.Printf(msg)
+	fmt.Println(msg)
 
 	_, err := fmt.Scanln(&choice)
 	if err != nil {
@@ -31,7 +31,7 @@ func Router() error {
 		}
 		return nil
 	case 3:
-		err = less1.CreateFiles(1000000)
+		err = less1.CreateFiles(1000)
 		if err != nil {
 			return err
 		}
