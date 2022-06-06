@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	less1 "github.com/vsurkov/go-gb2/internal/less1/internal/less1/delivery"
 	"os"
 )
 
@@ -11,7 +12,7 @@ func main() {
 			fmt.Println("Recovered panic:", v)
 		}
 	}()
-	err := router()
+	err := less1.Router()
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)

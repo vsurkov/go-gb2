@@ -1,4 +1,4 @@
-package main
+package less1
 
 import (
 	"fmt"
@@ -27,7 +27,7 @@ func (e *ErrorWithData) Error() string {
 		e.Trace)
 }
 
-func simplePanic() {
+func SimplePanic() {
 	defer func() {
 		if v := recover(); v != nil {
 			fmt.Printf("%s", v)
@@ -36,7 +36,7 @@ func simplePanic() {
 	generatePanic()
 }
 
-func customPanicError() (err error) {
+func CustomPanicError() (err error) {
 	defer func() {
 		if v := recover(); v != nil {
 			err = &ErrorWithData{

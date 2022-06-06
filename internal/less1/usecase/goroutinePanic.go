@@ -1,11 +1,11 @@
-package main
+package less1
 
 import (
 	"fmt"
 	"time"
 )
 
-func gorutinePanic() {
+func GoroutinePanic() {
 	go func() {
 		defer func() {
 			if v := recover(); v != nil {

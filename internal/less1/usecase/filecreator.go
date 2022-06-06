@@ -1,4 +1,4 @@
-package main
+package less1
 
 import (
 	"bufio"
@@ -25,11 +25,11 @@ func dummyCreateFiles(count int) error {
 	return nil
 }
 
-//Реализация которая работает, выбран самый быстрый из трех стандартных способов записи данных при создании файла
-func createFiles(count int) error {
+// CreateFiles рабочий и самый быстрый из трех стандартных способов записи данных при создании файла
+func CreateFiles(count int) error {
 	var totalBytes int
 	fileCount := count
-	defer timeTrack(time.Now(), "create files")
+	defer timeTrack(time.Now(), "INFO: создание файлов")
 	for n := 0; n <= fileCount; n++ {
 		wb, err := createBuffFile(n)
 		if err != nil {
@@ -38,6 +38,7 @@ func createFiles(count int) error {
 		totalBytes += wb
 
 	}
+	log.Printf("INFO: в каталоге %s успешно создано %d файлов \n", path, count)
 	return nil
 }
 
@@ -116,5 +117,5 @@ func check(e error) {
 }
 func timeTrack(start time.Time, name string) {
 	elapsed := time.Since(start)
-	log.Printf("%s took %s", name, elapsed)
+	log.Printf("%s заняло %s", name, elapsed)
 }
