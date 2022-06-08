@@ -1,7 +1,7 @@
 package main
 
 import (
-	less3 "github.com/vsurkov/go-gb2/internal/less3"
+	less3 "github.com/vsurkov/go-gb2/internal/less3/internal/less3"
 )
 
 func main() {
