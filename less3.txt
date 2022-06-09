@@ -1,0 +1,97 @@
+1. Создайте новый проект с использованием инструментария go mod.
+Инициализируем
+go mod init github.com/vsurkov/go-gb2
+
+
+2. Опубликуйте проект в репозитории, установив номер версии, указывающий на активный этап
+   разработки библиотеки.
+   Создаем отдельный репозиторий с названием lgr для пакета, создаем в нем .go файл с "package lgr"
+
+Добавляем, комитим, пушим в репозиторий, добавляем и пушим тег
+git add . && git commit -m "init" && git push && git tag -a v0.0.1 -m "init" && git push --tags
+Вносим изменение (на самом деле чиним баг) и повторяем процесс:
+git add . && git commit -m "fix" && git push && git tag -a v0.0.2 -m "fix" && git push --tags
+
+
+3. Обновите номера верий зависимостей в библиотеке.
+Проверяем номер версии в основном приложении, исползующем пакет lgr
+➜  go-gb2 git:(main) ✗ cat go.mod 
+module github.com/vsurkov/go-gb2
+
+go 1.18
+
+require github.com/vsurkov/lgr v0.0.1
+
+Обновляем версии зависимостей (апгрейдим наш пакет lgr)
+go get -u github.com/vsurkov/lgr
+go: downloading github.com/vsurkov/lgr v0.0.2
+go: upgraded github.com/vsurkov/lgr v0.0.1 => v0.0.2
+
+Проверяем что версии изменились
+➜  go-gb2 git:(main) ✗ cat go.mod                                                                                   
+module github.com/vsurkov/go-gb2
+
+go 1.18
+
+require github.com/vsurkov/lgr v0.0.2
+
+4. Сделайте изменения в проекте и запушьте их с мажорным обновлением версии пакета.
+Вносим существенные изменения (ко всем строкам будем добавлять время) и пушим 
+git add . && git commit -m "major ver" && git push && git tag -a v1.0.0 -m "new version" && git push --tags
+
+Другим способом обновляем версию пакета в основном проекте
+go get github.com/vsurkov/lgr@v1.0.0
+
+Проверяем что версия собраная не из vendor использует новый функционал
+➜  go-gb2 git:(main) ✗ go run -mod=mod
+
+2022-6-9 21:21:51 - hello world
+
+
+
+Проверяем, как будет работать с v2
+в пакете:
+➜  lgr git:(main) git tag -a v2.0.0 -m "2 version" && git push --tags
+
+попытка выполнить апгрейд в основном приложении не успешна:
+➜  go-gb2 git:(main) ✗ go get github.com/vsurkov/lgr@v2.0.0
+go: downloading github.com/vsurkov/lgr v2.0.0+incompatible
+go: upgraded github.com/vsurkov/lgr v1.0.0 => v2.0.0+incompatible
+
+
+В пакете lgr создаем каталог v2, переносим код, инициализируем:
+➜  v2 git:(main) ✗ go mod init github.com/vsurkov/lgr/v2
+и комитим в репозиторий: 
+➜  lgr git:(main) ✗ git add *  && git commit -m "ver2" && git push && git tag -a v2.0.2 -m "fix" && git push --tags
+
+
+В основном приложении попытка обновиться на новую версию неуспешна:
+➜  go-gb2 git:(main) ✗ go get github.com/vsurkov/lgr@v2.0.2                                                           
+go: github.com/vsurkov/lgr@v2.0.2: invalid version: module contains a go.mod file, so module path must match major version ("github.com/vsurkov/lgr/v2")
+
+Переходим на новую мажорную версию:
+go get github.com/vsurkov/lgr/v2 
+
+В коде добавляем в импорте версию
+import (
+   lgr "github.com/vsurkov/lgr/v2"
+)
+собирается хорошо. 
+
+5. Очистите неиспользуемые библиотеки.
+проверяем что есть неиспользуемые библиотеки:
+➜  go-gb2 git:(main) ✗ cat go.mod 
+module github.com/vsurkov/go-gb2
+go 1.18
+require github.com/vsurkov/lgr v2.0.1+incompatible
+require github.com/vsurkov/lgr/v2 v2.0.2
+
+Чистим и проверяем:
+➜  go-gb2 git:(main) ✗ go mod tidy && cat go.mod 
+module github.com/vsurkov/go-gb2
+
+go 1.18
+
+require github.com/vsurkov/lgr/v2 v2.0.2
+
+готовo.
