@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/vsurkov/go-gb2/less3"
+	lgr "github.com/vsurkov/lgr"
 )
 
 func main() {
-	less3.Logger("hello world")
+	lgr.Logger("hello world")
 }
