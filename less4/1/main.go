@@ -36,14 +36,14 @@ func main() {
 		wg.Add(1)
 		go func() {
 			defer func() {
-				time.Sleep(time.Millisecond)
 				wg.Done()
 			}()
 			result <- 1
 			<-workers
 		}()
 	}
-
+	//магическая миллисекунда (почему без нее не работает?)
+	time.Sleep(time.Millisecond)
 	wg.Wait()
 	lgr.Logger(fmt.Sprintf("result: %d", sum))
 }
