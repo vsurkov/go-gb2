@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/vsurkov/lgr/v2"
+	"runtime"
 	"sync"
 	"sync/atomic"
-	"time"
 )
 
 //С помощью пула воркеров написать программу, которая запускает 1000 горутин, каждая из которых увеличивает число на 1.
@@ -21,8 +21,6 @@ func main() {
 	var result = make(chan int64)
 	var sum int64
 
-	lgr.Logger(fmt.Sprintf("init start with buffSize=%v, count=%v", buffSize, count))
-
 	// горутина читает значения из канала
 	go func() {
 		for val := range result {
@@ -34,16 +32,16 @@ func main() {
 	for i := 0; i < count; i++ {
 		workers <- struct{}{}
 		wg.Add(1)
-		go func() {
+		go func(i int) {
 			defer func() {
 				wg.Done()
 			}()
 			result <- 1
 			<-workers
-		}()
+			// использование runtime.Gosched() дало возможность корректно работать без костылей (слипа) перед wg.Wait()
+			runtime.Gosched()
+		}(i)
 	}
-	//магическая миллисекунда (почему без нее не работает?)
-	time.Sleep(time.Millisecond)
 	wg.Wait()
 	lgr.Logger(fmt.Sprintf("result: %d", sum))
 }
