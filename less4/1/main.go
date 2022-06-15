@@ -32,7 +32,7 @@ func main() {
 	for i := 0; i < count; i++ {
 		workers <- struct{}{}
 		wg.Add(1)
-		go func(i int) {
+		go func() {
 			defer func() {
 				wg.Done()
 			}()
@@ -40,7 +40,7 @@ func main() {
 			<-workers
 			// использование runtime.Gosched() дало возможность корректно работать без костылей (слипа) перед wg.Wait()
 			runtime.Gosched()
-		}(i)
+		}()
 	}
 	wg.Wait()
 	lgr.Logger(fmt.Sprintf("result: %d", sum))
