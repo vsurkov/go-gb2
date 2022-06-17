@@ -11,88 +11,91 @@ import (
 
 //10% запись, 90% чтение;
 func BenchmarkSetUsecaseOne(b *testing.B) {
-	fmt.Printf("Mutex set:\n")
-	shaperMux(10, 1000, b)
+	muxSet(b, 10, 1000)
 }
+
 func BenchmarkRWSetUsecaseOne(b *testing.B) {
-	fmt.Printf("RWMutex set:\n")
-	shaperRWMux(10, 1000, b)
+	rwMuxSet(b, 10, 1000)
 }
 
 ////50% запись, 50% чтение;
-//func BenchmarkUsecaseTwo(b *testing.B) {
-//	shaperMux(50, 1000, b)
-//	shaperRWMux(50, 1000, b)
-//}
-//
+func BenchmarkSetUsecaseTwo(b *testing.B) {
+	muxSet(b, 50, 1000)
+}
+func BenchmarkRWSetUsecaseTwo(b *testing.B) {
+	rwMuxSet(b, 50, 1000)
+}
+
 ////90% запись, 10% чтение
-//func BenchmarkUsecaseThree(b *testing.B) {
-//	shaperMux(90, 1000, b)
-//	shaperRWMux(90, 1000, b)
-//}
-
-func shaperMux(writePercent int, scope int, b *testing.B) {
-
-	writeScope := scope * (writePercent / 100)
-	readScope := scope * (1 - (writePercent / 100))
-
-	SetAdd(b, writeScope)
-	SetHas(b, readScope)
+func BenchmarkSetUsecaseThree(b *testing.B) {
+	muxSet(b, 90, 1000)
+}
+func BenchmarkRWSetUsecaseThree(b *testing.B) {
+	rwMuxSet(b, 90, 1000)
 }
 
-func shaperRWMux(writePercent int, scope int, b *testing.B) {
-
-	writeScope := scope * (writePercent / 100)
-	readScope := scope * (1 - (writePercent / 100))
-
-	RWSetAdd(b, writeScope)
-	RWSetHas(b, readScope)
-}
-
-func SetAdd(b *testing.B, parallels int) {
+func muxSet(b *testing.B, writePercent float32, scope float32) {
 	var set = NewSet()
+	var s = NewScope(writePercent, scope)
+	writeScope := s.GetWriteScope()
+	readScope := s.GetReadScope()
+	fmt.Printf("\nMutex set, writeScope:%v, readScope:%v of total:%v\n",
+		writeScope,
+		readScope,
+		scope)
+
+	b.ResetTimer()
+	b.StartTimer()
+
 	b.Run("", func(b *testing.B) {
-		b.SetParallelism(parallels)
+		b.SetParallelism(writeScope)
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
 				set.Add(1)
 			}
 		})
 	})
-}
 
-func SetHas(b *testing.B, parallels int) {
-	var set = NewSet()
 	b.Run("", func(b *testing.B) {
-		b.SetParallelism(parallels)
+		b.SetParallelism(readScope)
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
 				set.Has(1)
 			}
 		})
 	})
+	b.StopTimer()
 }
 
-func RWSetAdd(b *testing.B, parallels int) {
+func rwMuxSet(b *testing.B, writePercent float32, scope float32) {
 	var set = NewRWSet()
+	var s = NewScope(writePercent, scope)
+	writeScope := s.GetWriteScope()
+	readScope := s.GetReadScope()
+	fmt.Printf("\nRWMutex set, writeScope:%v, readScope:%v of total:%v\n",
+		writeScope,
+		readScope,
+		scope)
+
+	b.ResetTimer()
+	b.StartTimer()
+
 	b.Run("", func(b *testing.B) {
-		b.SetParallelism(parallels)
+		b.SetParallelism(writeScope)
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
 				set.Add(1)
 			}
 		})
 	})
-}
 
-func RWSetHas(b *testing.B, parallels int) {
-	var set = NewRWSet()
 	b.Run("", func(b *testing.B) {
-		b.SetParallelism(parallels)
+		b.SetParallelism(readScope)
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
 				set.Has(1)
 			}
 		})
 	})
+	b.StopTimer()
 }
