@@ -19,6 +19,7 @@
 cpu: Intel(R) Core(TM) i7-7820HQ CPU @ 2.90GHz результаты:
 
 ##10% запись, 90% чтение
+
 ###Mutex set, writeScope:100, readScope:900 of total:1000
 BenchmarkSetUsecaseOne/#00-8   	10084777	       112.6 ns/op
 BenchmarkSetUsecaseOne/#01-8   	10733632	       105.6 ns/op
