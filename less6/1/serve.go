@@ -5,7 +5,6 @@ import (
 )
 
 func serve(count int, listeners int) int {
-
 	var wgl sync.WaitGroup
 	var wgw sync.WaitGroup
 
