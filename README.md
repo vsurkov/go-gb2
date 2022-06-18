@@ -33,3 +33,29 @@ go tool trace trace.out
 - остальное как в п.1
 
 3. Смоделировать ситуацию “гонки”, и проверить программу на наличии “гонки”
+- моделируем не используя мьютекс или атомик в горутине листнера
+- запускаем go run **-race** main.go
+и получаем предупреждение:
+'''
+➜  3 git:(less6) ✗ go run -race main.go
+==================
+WARNING: DATA RACE
+Read at 0x00c00013c038 by goroutine 8:
+  main.main.func1()
+      /Users/HOMEr/Dropbox/Geekbrains/Go_course/go-gb-repo/go-gb2/less6/3/main.go:29 +0xcc
+
+Previous write at 0x00c00013c038 by goroutine 7:
+  main.main.func1()
+      /Users/HOMEr/Dropbox/Geekbrains/Go_course/go-gb-repo/go-gb2/less6/3/main.go:29 +0xe6
+
+Goroutine 8 (running) created at:
+  main.main()
+      /Users/HOMEr/Dropbox/Geekbrains/Go_course/go-gb-repo/go-gb2/less6/3/main.go:25 +0xfc
+
+Goroutine 7 (running) created at:
+  main.main()
+      /Users/HOMEr/Dropbox/Geekbrains/Go_course/go-gb-repo/go-gb2/less6/3/main.go:25 +0xfc
+==================
+
+'''
+
