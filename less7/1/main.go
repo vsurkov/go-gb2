@@ -37,7 +37,7 @@ func (p Person) print() {
 func main() {
 	bob := Person{
 		Name:   "bob",
-		Age:    22,
+		Age:    20,
 		Weight: 88.1,
 		Male:   true,
 		Place: struct {
@@ -55,12 +55,9 @@ func main() {
 		"Weight": 90.9,
 		"Male":   false,
 	}
-	//bob.print()
 
 	err := peopleChanger(&bob, changes)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	//bob.print()
 }

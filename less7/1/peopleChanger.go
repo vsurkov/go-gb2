@@ -17,6 +17,7 @@ func peopleChanger(in *Person, values map[string]interface{}) error {
 	}
 
 	inValue := reflect.ValueOf(in)
+
 	if inValue.Kind() == reflect.Ptr {
 		inValue = inValue.Elem()
 	}
@@ -32,10 +33,40 @@ func peopleChanger(in *Person, values map[string]interface{}) error {
 				inFieldValue := inValue.Field(i)
 				inFieldType := inField.Type
 
-				err := updateField(inFieldType, &inFieldValue, mapValue)
-				if err != nil {
-					return errors.New(fmt.Sprintf("in value: %v - %v", inField.Name, err))
+				toType := reflect.TypeOf(mapValue)
+
+				if inFieldType.Name() != toType.Name() {
+					return errors.New(fmt.Sprintf("in value %v mismatched types, expected: %v - received %v\n",
+						inField.Name,
+						inFieldType,
+						toType))
 				}
+
+				switch c := mapValue.(type) {
+				case int:
+					if _, ok := mapValue.(int); !ok {
+						return errors.New(fmt.Sprintf("type case matching, expected: int - received %v", reflect.TypeOf(c)))
+					}
+					inFieldValue.SetInt(int64(mapValue.(int)))
+				case string:
+					if _, ok := mapValue.(string); !ok {
+						return errors.New(fmt.Sprintf("type case matching, expected: string - received %v", reflect.TypeOf(c)))
+					}
+					inFieldValue.SetString(mapValue.(string))
+				case float64:
+					if _, ok := mapValue.(float64); !ok {
+						return errors.New(fmt.Sprintf("type case matching, expected: float64 - received %v", reflect.TypeOf(c)))
+					}
+					inFieldValue.SetFloat(mapValue.(float64))
+				case bool:
+					if _, ok := mapValue.(bool); !ok {
+						return errors.New(fmt.Sprintf("type case matching, expected: bool - received %v", reflect.TypeOf(c)))
+					}
+					inFieldValue.SetBool(mapValue.(bool))
+				default:
+					log.Fatal(fmt.Sprintf("type case matching, received unknown format: %v\n", reflect.TypeOf(c)))
+				}
+
 			}
 		}
 	}
@@ -43,28 +74,20 @@ func peopleChanger(in *Person, values map[string]interface{}) error {
 	return nil
 }
 
-func updateField(fromType reflect.Type, fromValue *reflect.Value, to interface{}) error {
-	toType := reflect.TypeOf(to)
-
-	if fromType != toType {
-		return errors.New(fmt.Sprintf("mismatched types, expected: %v - received %v\n", fromType, toType))
-	}
-
-	switch to.(type) {
-	case int:
-		log.Println(fromValue.Int())
-		//from = to.(int64)
-	case float64:
-		log.Println(fromValue.Float())
-		//from = to.(float64)
-	case string:
-		log.Println(fromValue.String())
-		//from = to.(string)
-	case bool:
-		log.Println(fromValue.Bool())
-		//toVal := to.(bool)
-	default:
-		return errors.New("unknown type")
-	}
-	return nil
-}
+//switch to.(type) {
+//case int:
+//	log.Println(fromValue.Int())
+//	//from = to.(int64)
+//case float64:
+//	log.Println(fromValue.Float())
+//	//from = to.(float64)
+//case string:
+//	log.Println(fromValue.String())
+//	//from = to.(string)
+//case bool:
+//	log.Println(fromValue.Bool())
+//	//toVal := to.(bool)
+//default:
+//	return errors.New("unknown type")
+//}
+//return nil
