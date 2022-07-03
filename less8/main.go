@@ -3,11 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/namsral/flag"
-	"hash/crc32"
-	"io"
 	"log"
 	"os"
-	"strings"
 )
 
 //
@@ -34,69 +31,14 @@ func main() {
 	log.Println(rm)
 
 	//Запускем обработку файловой структуры
-	Crawl(path)
+	Scan(path)
 }
 
-func Crawl(dir string) {
-	dirEntry, err := os.ReadDir(dir)
+func errorHandler(text string, err error) {
 	if err != nil {
-		panic(err)
-	}
-
-	for i := range dirEntry {
-		log.Println(entryFormatter(dir, dirEntry[i]))
-		if dirEntry[i].IsDir() {
-			Crawl(strings.Join([]string{dir, dirEntry[i].Name()}, "/"))
-		}
-	}
-}
-
-func entryFormatter(dir string, entry os.DirEntry) string {
-	var hash string
-
-	if !entry.IsDir() {
-		hash = calcHash(dir + "/" + entry.Name())
-	}
-	return fmt.Sprintf("%s/%s\t%s", dir, entry.Name(), hash)
-}
-
-func calcHash(fullName string) string {
-	const chunkSize = 10
-
-	//Открываем файл, обрабатываем ошибки и ошибки закрытия и ошибки записи ошибки в os.Stderr
-	f, err := os.Open(fullName)
-	if err != nil {
-		_, err = fmt.Fprintf(os.Stderr, "can't close file %v", err.Error())
+		_, err = fmt.Fprintf(os.Stderr, "%v: %v", text, err.Error())
 		if err != nil {
-			log.Println("Error on write error on os.Stderr")
+			log.Println(err.Error())
 		}
 	}
-	defer func(f *os.File) {
-		err := f.Close()
-		if err != nil {
-			_, err = fmt.Fprintf(os.Stderr, "can't close file %v", err.Error())
-			if err != nil {
-				log.Println("Error on write error on os.Stderr")
-			}
-		}
-	}(f)
-
-	//Читаем файл чанками в байтовый массив
-	buf := make([]byte, chunkSize)
-
-	for {
-		_, err := f.Read(buf)
-		if err != nil && err != io.EOF {
-			log.Println(err)
-		}
-
-		if err == io.EOF {
-			break
-		}
-	}
-
-	h := crc32.NewIEEE()
-	_, err = h.Write(buf)
-
-	return fmt.Sprintf("%v", h.Sum32())
 }
