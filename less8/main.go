@@ -2,9 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/dustin/go-humanize"
 	"github.com/namsral/flag"
-	"log"
-	"os"
 )
 
 //
@@ -24,21 +23,40 @@ func main() {
 	var rm bool
 
 	// Инициализируем переменные
-	flag.StringVar(&path, "path", ".", "set folder path to scan")
+	flag.StringVar(&path, "p", ".", "set path to scan")
 	flag.BoolVar(&rm, "rm", false, "remove duplicate files")
+	flag.Parse()
 
-	log.Println(path)
-	log.Println(rm)
+	//Запускем сканирование файловой структуры
+	//res := Scan(path)
+	res := Scan("/Users/HOMEr/Downloads")
 
-	//Запускем обработку файловой структуры
-	Scan(path)
-}
+	//var totalSize
+	for key, val := range res.dupl {
+		var size uint64
+		fcount := uint64(len(val))
 
-func errorHandler(text string, err error) {
-	if err != nil {
-		_, err = fmt.Fprintf(os.Stderr, "%v: %v", text, err.Error())
-		if err != nil {
-			log.Println(err.Error())
+		fmt.Printf(DebugColor, fmt.Sprintf("HASH %v\n", key))
+		for kk, vv := range val {
+			fmt.Printf("  %v/%v\n", kk, vv.finfo.Name())
+
+			if size == 0 {
+				size = uint64(vv.finfo.Size())
+			}
+
 		}
+
+		fmt.Printf(InfoColor,
+			fmt.Sprintf("Files: %v\tSize: %v \tTotal: %v",
+				fcount,
+				humanize.Bytes(size),
+				humanize.Bytes(size*fcount)))
+		fmt.Printf(ErrorColor,
+			fmt.Sprintf("\t Overspending: %v\n\n", humanize.Bytes(size*(fcount-1))))
 	}
 }
+
+//entryInfo, err := entry.Info()
+//errorHandler("getting oldFile Info error", err)
+//size := uint64(entryInfo.Size())
+//name := entryInfo.Name()

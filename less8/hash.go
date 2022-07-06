@@ -7,8 +7,8 @@ import (
 	"os"
 )
 
-func calcHash(fullName string) string {
-	const chunkSize = 10
+func calcMD5Hash(fullName string) string {
+	const chunkSize = 1_024_000
 
 	//Открываем файл, обрабатываем ошибки и ошибки закрытия и ошибки записи ошибки в os.Stderr
 	f, err := os.Open(fullName)
@@ -25,9 +25,9 @@ func calcHash(fullName string) string {
 	for {
 		_, err := f.Read(buf)
 		if err != nil && err != io.EOF {
-			errorHandler("error reading chunk of file", err)
+			errorHandler("chunk read err", err)
+			break
 		}
-
 		if err == io.EOF {
 			break
 		}
@@ -35,7 +35,15 @@ func calcHash(fullName string) string {
 
 	h := md5.New()
 	_, err = h.Write(buf)
-	errorHandler("error on write on hash", err)
+	errorHandler("error on hash write", err)
 
 	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+func calcSizeNameHash(entry os.DirEntry) string {
+	entryInfo, err := entry.Info()
+	errorHandler("getting file Info error", err)
+
+	s := fmt.Sprintf("%v %v", entryInfo.Size(), entryInfo.Name())
+	return fmt.Sprintf("%x", md5.Sum([]byte(s)))
 }
