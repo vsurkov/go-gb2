@@ -11,7 +11,7 @@ func TestScan(t *testing.T) {
 	for key, val := range res.dupl {
 		fmt.Printf("HASH %v\n", key)
 		for kk, vv := range val {
-			fmt.Printf("%v/%v\n", kk, vv.info.Name())
+			fmt.Printf("%v/%v\n", kk, vv.finfo.Name())
 		}
 		fmt.Println()
 	}

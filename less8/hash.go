@@ -3,14 +3,13 @@ package main
 import (
 	"crypto/md5"
 	"fmt"
-	"io"
 	"os"
 )
 
-func calcMD5Hash(fullName string) string {
+func getMD5hash(fullName string) string {
 	const chunkSize = 1_024_000
 
-	//Открываем файл, обрабатываем ошибки и ошибки закрытия и ошибки записи ошибки в os.Stderr
+	// Открываем файл, обрабатываем ошибки и ошибки закрытия и ошибки записи ошибки в os.Stderr
 	f, err := os.Open(fullName)
 	errorHandler("can't close file", err)
 
@@ -19,16 +18,12 @@ func calcMD5Hash(fullName string) string {
 		errorHandler("can't close file", err)
 	}(f)
 
-	//Читаем файл чанками в байтовый массив
+	// Читаем файл чанками в байтовый массив
 	buf := make([]byte, chunkSize)
 
 	for {
 		_, err := f.Read(buf)
-		if err != nil && err != io.EOF {
-			errorHandler("chunk read err", err)
-			break
-		}
-		if err == io.EOF {
+		if err != nil {
 			break
 		}
 	}
@@ -40,7 +35,7 @@ func calcMD5Hash(fullName string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-func calcSizeNameHash(entry os.DirEntry) string {
+func getSizeNameHash(entry os.DirEntry) string {
 	entryInfo, err := entry.Info()
 	errorHandler("getting file Info error", err)
 
