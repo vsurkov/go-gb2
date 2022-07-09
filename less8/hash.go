@@ -13,11 +13,6 @@ func getMD5hash(fullName string) string {
 	f, err := os.Open(fullName)
 	errorHandler("can't close file", err)
 
-	defer func(f *os.File) {
-		err := f.Close()
-		errorHandler("can't close file", err)
-	}(f)
-
 	// Читаем файл чанками в байтовый массив
 	buf := make([]byte, chunkSize)
 
@@ -31,7 +26,10 @@ func getMD5hash(fullName string) string {
 	h := md5.New()
 	_, err = h.Write(buf)
 	errorHandler("error on hash write", err)
-
+	defer func(f *os.File) {
+		err := f.Close()
+		errorHandler("can't close file", err)
+	}(f)
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 

@@ -22,11 +22,12 @@ func main() {
 	var rm bool
 
 	// Инициализируем переменные
-	flag.StringVar(&path, "p", ".", "set path to scan")
+	flag.StringVar(&path, "p", ".", "set path to walk")
 	flag.BoolVar(&rm, "rm", false, "remove duplicate files")
 	flag.Parse()
 
 	defer timeTrack(time.Now(), "elapsed time")
 	// Запускем сканирование файловой структуры
 	Output(Scan(path))
+	//Output(Scan("/Users/HOMEr/Downloads/"))
 }

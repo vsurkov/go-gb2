@@ -3,23 +3,47 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"runtime"
+	"sync"
 )
 
 func Scan(dir string) *Result {
-	return filter(scan(filepath.Clean(dir)))
+	return filter(walk(filepath.Clean(dir)))
 }
 
 // Упрощенный и ускоренный поиск дубликатов, на основе размера файла и имени
-func scan(dir string) *Result {
-	dirEntry, err := os.ReadDir(dir)
-	errorHandler("can't read dir", err)
+func walk(dir string) *Result {
+	wg := sync.WaitGroup{}
+	mux := sync.Mutex{}
+	workers := make(chan struct{}, runtime.NumCPU()*8)
 
-	for i := range dirEntry {
-		if dirEntry[i].IsDir() {
-			scan(filepath.Join(dir, dirEntry[i].Name()))
+	wg.Add(1)
+	go func(dir string) {
+		workers <- struct{}{}
+		defer func() { <-workers }()
+		mux.Lock()
+		dirEntry, err := os.ReadDir(dir)
+		mux.Unlock()
+		errorHandler("can't read dir", err)
+
+		wg2 := sync.WaitGroup{}
+		subWorkers := make(chan struct{}, runtime.NumCPU()*8)
+		for i := range dirEntry {
+			wg2.Add(1)
+			func(i int) {
+				subWorkers <- struct{}{}
+				defer func() { <-subWorkers }()
+				if dirEntry[i].IsDir() {
+					walk(filepath.Join(dir, dirEntry[i].Name()))
+				}
+				entryProcess(dir, dirEntry[i])
+				wg2.Done()
+			}(i)
 		}
-		entryProcess(dir, dirEntry[i])
-	}
+		wg2.Wait()
+		wg.Done()
+	}(dir)
+	wg.Wait()
 	return search
 }
 
@@ -28,32 +52,46 @@ func filter(search *Result) *Result {
 	unfiltered := search.dupl
 	var filtered = make(map[string]map[string]File)
 
+	wg := sync.WaitGroup{}
+	mux := sync.Mutex{}
+	workers := make(chan struct{}, runtime.NumCPU()*8)
+
 	// Разберем мапу нефильтрованых с ключом по хешу
 	for hash, m := range unfiltered {
-		var crcMaster string
-		// Разберем вложенную мапу файлов с ключом по текущей директории
-		for dir, file := range m {
-			if crcMaster == "" {
-				crcMaster = getMD5hash(filepath.Join(file.dir, file.finfo.Name()))
-			}
-			crcFile := getMD5hash(filepath.Join(file.dir, file.finfo.Name()))
-
-			// Если crc текущего файла совпадает с мастер значит это дубликат, иначе отбрасываем
-			if crcMaster == crcFile {
-				// если нет значения по hash - нужно инициализировать вложенную мапу
-				dummy, ok := filtered[hash]
-				if !ok {
-					dummy = make(map[string]File)
-					filtered[hash] = dummy
+		wg.Add(1)
+		go func(hash string, m map[string]File) {
+			workers <- struct{}{}
+			defer func() { <-workers }()
+			var crcMaster string
+			// Разберем вложенную мапу файлов с ключом по текущей директории
+			mux.Lock()
+			for dir, file := range m {
+				if crcMaster == "" {
+					crcMaster = getMD5hash(filepath.Join(file.dir, file.finfo.Name()))
 				}
+				crcFile := getMD5hash(filepath.Join(file.dir, file.finfo.Name()))
 
-				// сохраняем в список фильтрованого мапы
-				filtered[hash][dir] = file
+				// Если crc текущего файла совпадает с мастер значит это дубликат, иначе отбрасываем
+				if crcMaster == crcFile {
+					// если нет значения по hash - нужно инициализировать вложенную мапу
+					dummy, ok := filtered[hash]
+					if !ok {
+						dummy = make(map[string]File)
+						filtered[hash] = dummy
+					}
+
+					// сохраняем в список фильтрованого мапы
+					filtered[hash][dir] = file
+				}
+				delete(m, dir)
 			}
-			delete(m, dir)
-		}
-		delete(unfiltered, hash)
+			delete(unfiltered, hash)
+			mux.Unlock()
+			wg.Done()
+		}(hash, m)
 	}
+	wg.Wait()
+	close(workers)
 	// заполним очищенный результат фильтрованым
 	search.dupl = removeLonely(filtered)
 

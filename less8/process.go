@@ -12,7 +12,6 @@ func entryProcess(dir string, entry os.DirEntry) {
 	if entry.IsDir() {
 		return
 	}
-
 	hash = getSizeNameHash(entry)
 
 	// Проверить если в хранилище уже есть искомый хеш то добавить найденный ранее файл и новый в список дублей
@@ -34,7 +33,6 @@ func entryProcess(dir string, entry os.DirEntry) {
 		}
 	}
 
-	//
 	search.files[hash] = File{
 		dir:   dir,
 		finfo: entryInfo,
