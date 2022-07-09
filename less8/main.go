@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/namsral/flag"
-	"strings"
+	"time"
 )
 
 //
@@ -26,8 +26,7 @@ func main() {
 	flag.BoolVar(&rm, "rm", false, "remove duplicate files")
 	flag.Parse()
 
+	defer timeTrack(time.Now(), "elapsed time")
 	// Запускем сканирование файловой структуры
-	Output(Scan(strings.TrimRight(path, "/")))
-	//output(Scan("/Users/HOMEr/Downloads/test2"))
-	//output(scan("/Users/HOMEr/Downloads/test2"))
+	Output(Scan(path))
 }

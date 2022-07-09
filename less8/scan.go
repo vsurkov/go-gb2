@@ -1,13 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"strings"
+	"path/filepath"
 )
 
 func Scan(dir string) *Result {
-	return filter(scan(dir))
+	return filter(scan(filepath.Clean(dir)))
 }
 
 // Упрощенный и ускоренный поиск дубликатов, на основе размера файла и имени
@@ -17,7 +16,7 @@ func scan(dir string) *Result {
 
 	for i := range dirEntry {
 		if dirEntry[i].IsDir() {
-			scan(strings.Join([]string{dir, dirEntry[i].Name()}, "/"))
+			scan(filepath.Join(dir, dirEntry[i].Name()))
 		}
 		entryProcess(dir, dirEntry[i])
 	}
@@ -35,9 +34,9 @@ func filter(search *Result) *Result {
 		// Разберем вложенную мапу файлов с ключом по текущей директории
 		for dir, file := range m {
 			if crcMaster == "" {
-				crcMaster = getMD5hash(fmt.Sprintf("%v/%v", file.dir, file.finfo.Name()))
+				crcMaster = getMD5hash(filepath.Join(file.dir, file.finfo.Name()))
 			}
-			crcFile := getMD5hash(fmt.Sprintf("%v/%v", file.dir, file.finfo.Name()))
+			crcFile := getMD5hash(filepath.Join(file.dir, file.finfo.Name()))
 
 			// Если crc текущего файла совпадает с мастер значит это дубликат, иначе отбрасываем
 			if crcMaster == crcFile {
@@ -64,7 +63,6 @@ func filter(search *Result) *Result {
 // Нужно очистить от мап с одним файлом
 func removeLonely(search map[string]map[string]File) map[string]map[string]File {
 	for hash := range search {
-
 		if len(search[hash]) == 1 {
 			delete(search, hash)
 		}

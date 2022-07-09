@@ -13,7 +13,6 @@ func entryProcess(dir string, entry os.DirEntry) {
 		return
 	}
 
-	//hash = getMD5hash(dir + "/" + entry.Name())
 	hash = getSizeNameHash(entry)
 
 	// Проверить если в хранилище уже есть искомый хеш то добавить найденный ранее файл и новый в список дублей
