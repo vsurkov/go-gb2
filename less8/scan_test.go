@@ -17,13 +17,13 @@ func TestScanLists(t *testing.T) {
 	//	fmt.Println()
 	//}
 	exp := 11
-	rec := len(res.files)
+	rec := len(res.files.m)
 	if exp != rec {
 		t.Errorf("Expected %v, but received %v", exp, rec)
 	}
 
 	exp = 1
-	rec = len(res.dupl)
+	rec = len(res.dupl.m)
 	if exp != rec {
 		t.Errorf("Expected %v, but received %v", exp, rec)
 	}
@@ -49,7 +49,7 @@ func TestScanResult(t *testing.T) {
 	for key := range files {
 		exp := files[key]
 
-		mapVal, ok := result.files[key]
+		mapVal, ok := result.files.m[key]
 		if !ok {
 			t.Errorf("result.files[%v] empty", key)
 			log.Fatal()
@@ -69,7 +69,7 @@ func TestScanResult(t *testing.T) {
 	for key := range dupl {
 		exp := dupl[key]
 
-		mapVal, ok := result.dupl[duplKey][key]
+		mapVal, ok := result.dupl.m[duplKey][key]
 		if !ok {
 			t.Errorf("result.dupl[%v][%v] empty", duplKey, key)
 			log.Fatal()

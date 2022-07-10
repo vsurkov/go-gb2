@@ -15,7 +15,7 @@ func Scan(dir string) *Result {
 func walk(dir string) *Result {
 	wg := sync.WaitGroup{}
 	mux := sync.Mutex{}
-	workers := make(chan struct{}, runtime.NumCPU()*8)
+	workers := make(chan struct{}, runtime.NumCPU()*2)
 
 	wg.Add(1)
 	go func(dir string) {
@@ -27,10 +27,10 @@ func walk(dir string) *Result {
 		errorHandler("can't read dir", err)
 
 		wg2 := sync.WaitGroup{}
-		subWorkers := make(chan struct{}, runtime.NumCPU()*8)
+		subWorkers := make(chan struct{}, runtime.NumCPU()*2)
 		for i := range dirEntry {
 			wg2.Add(1)
-			func(i int) {
+			go func(i int) {
 				subWorkers <- struct{}{}
 				defer func() { <-subWorkers }()
 				if dirEntry[i].IsDir() {
@@ -49,7 +49,7 @@ func walk(dir string) *Result {
 
 // Из предподготовленного списка дубликатов нужно отфильтровать случайные совпадения на основе CRC-суммы
 func filter(search *Result) *Result {
-	unfiltered := search.dupl
+	unfiltered := search.dupl.m
 	var filtered = make(map[string]map[string]File)
 
 	wg := sync.WaitGroup{}
@@ -93,7 +93,7 @@ func filter(search *Result) *Result {
 	wg.Wait()
 	close(workers)
 	// заполним очищенный результат фильтрованым
-	search.dupl = removeLonely(filtered)
+	search.dupl.m = removeLonely(filtered)
 
 	return search
 }

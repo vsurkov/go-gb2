@@ -6,7 +6,7 @@ import (
 )
 
 func Output(res *Result) {
-	for hash, m := range res.dupl {
+	for hash, m := range res.dupl.m {
 		var size uint64
 		fcount := uint64(len(m))
 
@@ -26,7 +26,7 @@ func Output(res *Result) {
 			fmt.Sprintf("\t Overspending: %v\n\n", humanize.Bytes(size*(fcount-1))))
 	}
 
-	if len(res.dupl) == 0 {
+	if len(res.dupl.m) == 0 {
 		fmt.Printf(InfoColor, "no duplicate files found\n")
 	}
 }
